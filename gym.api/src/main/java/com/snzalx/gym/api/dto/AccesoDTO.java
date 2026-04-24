@@ -1,0 +1,15 @@
+package com.snzalx.gym.api.dto;
+
+import lombok.Data;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+// dto para responder al escaner con la semaforizacion
+@Data
+public class AccesoDTO {
+    private UUID id;
+    private LocalDateTime fechaHora;
+    private Boolean esExitoso;
+    private String mensajeSemaforo;
+    private String nombreSocio;
+}
