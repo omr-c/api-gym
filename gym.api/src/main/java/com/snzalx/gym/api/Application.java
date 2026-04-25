@@ -2,9 +2,12 @@ package com.snzalx.gym.api;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import com.snzalx.gym.api.model.*;
-import com.snzalx.gym.api.repository.*;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
+
 @SpringBootApplication
+@EnableAsync
+@EnableScheduling // Habilitamos la programación de tareas
 public class Application {
 
 	public static void main(String[] args) {

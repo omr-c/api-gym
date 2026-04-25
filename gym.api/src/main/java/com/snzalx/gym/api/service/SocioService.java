@@ -3,38 +3,47 @@ package com.snzalx.gym.api.service;
 import com.snzalx.gym.api.model.Socio;
 import com.snzalx.gym.api.repository.SocioRepository;
 import org.springframework.stereotype.Service;
+import java.util.List;
 import java.util.UUID;
 
 @Service
 public class SocioService {
 
-    // inyeccion de dependencias
     private final SocioRepository socioRepository;
+    private final EmailService emailService;
 
-    public SocioService(SocioRepository socioRepository) {
+    public SocioService(SocioRepository socioRepository, EmailService emailService) {
         this.socioRepository = socioRepository;
+        this.emailService = emailService;
     }
 
-    // registra un nuevo socio con valores por defecto
     public Socio registrarSocio(Socio socio) {
-        // estado inicial por defecto
-        socio.setEstado("activo");
-        // se genera la identidad digital unica para el qr
+        socio.setEstado("pendiente");
         socio.setQrToken(UUID.randomUUID());
-        return socioRepository.save(socio);
+        
+        Socio guardado = socioRepository.save(socio);
+        
+        // Disparo de correo de bienvenida
+        if (guardado.getEmail() != null && !guardado.getEmail().isEmpty()) {
+            emailService.enviarBienvenida(guardado.getEmail(), guardado.getNombre());
+        }
+        
+        return guardado;
     }
 
-    // busca al socio usando el token del escaner
     public Socio obtenerPorQr(UUID qrToken) {
         return socioRepository.findByQrToken(qrToken)
                 .orElseThrow(() -> new RuntimeException("socio no encontrado en el sistema"));
     }
 
-    // aplica la baja logica o cambio de estado
     public Socio cambiarEstado(UUID id, String nuevoEstado) {
         Socio socio = socioRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("socio no encontrado"));
         socio.setEstado(nuevoEstado);
         return socioRepository.save(socio);
+    }
+
+    public List<Socio> listarActivos() {
+        return socioRepository.findByEstadoIgnoreCase("activo");
     }
 }
