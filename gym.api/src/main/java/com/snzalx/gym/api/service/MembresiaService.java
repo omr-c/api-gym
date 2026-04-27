@@ -15,29 +15,26 @@ public class MembresiaService {
     private final MembresiaRepository membresiaRepository;
     private final SocioRepository socioRepository;
     private final SocioService socioService;
+    private final EmailService emailService;
 
     public MembresiaService(MembresiaRepository membresiaRepository, 
                             SocioRepository socioRepository, 
-                            SocioService socioService) {
+                            SocioService socioService,
+                            EmailService emailService) {
         this.membresiaRepository = membresiaRepository;
         this.socioRepository = socioRepository;
         this.socioService = socioService;
+        this.emailService = emailService;
     }
 
-    // Lógica principal para registrar un pago y renovar la membresía
     public MembresiaDTO registrarPago(MembresiaDTO dto) {
-        // 1. Buscamos al socio para vincular el pago
         Socio socio = socioRepository.findById(dto.getSocioId())
                 .orElseThrow(() -> new RuntimeException("Socio no encontrado para registrar pago"));
 
-        // 2. Definimos la fecha de inicio (hoy)
         LocalDate fechaInicio = LocalDate.now();
-        
-        // 3. Calculamos la fecha de vencimiento según la duración recibida (por defecto 30 días)
         int dias = (dto.getDuracionDias() != null) ? dto.getDuracionDias() : 30;
         LocalDate fechaVencimiento = fechaInicio.plusDays(dias);
 
-        // 4. Creamos y guardamos la entidad Membresia
         Membresia membresia = new Membresia();
         membresia.setSocio(socio);
         membresia.setMonto(dto.getMonto());
@@ -47,10 +44,18 @@ public class MembresiaService {
 
         Membresia guardada = membresiaRepository.save(membresia);
 
-        // 5. Actualizamos el estado del socio a "activo" usando el método de Omar
         socioService.cambiarEstado(socio.getId(), "activo");
 
-        // 6. Preparamos el DTO de respuesta para la App Flutter
+        // Disparo de correo asíncrono
+        if (socio.getEmail() != null && !socio.getEmail().isEmpty()) {
+            emailService.enviarReciboPago(
+                socio.getEmail(), 
+                socio.getNombre(), 
+                guardada.getMonto(), 
+                guardada.getFechaVencimiento().toString()
+            );
+        }
+
         MembresiaDTO respuesta = new MembresiaDTO();
         respuesta.setId(guardada.getId());
         respuesta.setSocioId(socio.getId());
