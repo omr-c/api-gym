@@ -12,4 +12,5 @@ public class AccesoDTO {
     private Boolean esExitoso;
     private String mensajeSemaforo;
     private String nombreSocio;
+    private UUID socioId; // <--- AGREGADO PARA EL FRONTEND
 }

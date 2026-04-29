@@ -4,6 +4,7 @@ import com.snzalx.gym.api.dto.AccesoDTO;
 import com.snzalx.gym.api.service.AccesoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -21,5 +22,12 @@ public class AccesoController {
     public ResponseEntity<AccesoDTO> escanearQr(@PathVariable UUID qrToken) {
         AccesoDTO resultado = accesoService.registrarAccesoEscaner(qrToken);
         return ResponseEntity.ok(resultado);
+    }
+
+    // Nuevo: Endpoint para obtener los últimos accesos recientes
+    @GetMapping("/recientes")
+    public ResponseEntity<List<AccesoDTO>> obtenerUltimosAccesos() {
+        List<AccesoDTO> ultimosAccesos = accesoService.obtenerUltimosAccesos();
+        return ResponseEntity.ok(ultimosAccesos);
     }
 }

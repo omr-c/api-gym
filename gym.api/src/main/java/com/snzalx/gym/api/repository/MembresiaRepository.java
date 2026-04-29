@@ -13,4 +13,7 @@ public interface MembresiaRepository extends JpaRepository<Membresia, UUID> {
     
     // Busca membresías que vencen entre dos fechas
     List<Membresia> findByFechaVencimientoBetween(LocalDate start, LocalDate end);
+
+    // Nuevo: Para el dashboard, calcular ingresos en un rango de fechas de inicio de pago
+    List<Membresia> findByFechaInicioBetween(LocalDate start, LocalDate end);
 }

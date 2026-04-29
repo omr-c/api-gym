@@ -12,4 +12,7 @@ public interface SocioRepository extends JpaRepository<Socio, UUID> {
     Optional<Socio> findByQrToken(UUID qrToken);
     Optional<Socio> findByTelefono(String telefono);
     List<Socio> findByEstadoIgnoreCase(String estado);
+
+    // Nuevo: Para el dashboard, contar socios por estado
+    Long countByEstadoIgnoreCase(String estado);
 }
