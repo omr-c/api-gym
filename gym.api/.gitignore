@@ -20,3 +20,7 @@
 # archivos de sistema y ayuda
 HELP.md
 .mvn/
+
+# Archivos de compilación de Alexis
+target/
+*.class
