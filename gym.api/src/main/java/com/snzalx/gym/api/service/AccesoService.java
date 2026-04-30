@@ -11,11 +11,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class AccesoService {
 
-    // inyeccion de repositorios y servicios
     private final AccesoRepository accesoRepository;
     private final SocioService socioService;
     private final MembresiaRepository membresiaRepository;
@@ -28,7 +28,6 @@ public class AccesoService {
         this.membresiaRepository = membresiaRepository;
     }
 
-    // logica principal del escaner con validacion de fechas de pago
     public AccesoDTO registrarAccesoEscaner(UUID qrToken) {
         Socio socio = socioService.obtenerPorQr(qrToken);
 
@@ -39,6 +38,7 @@ public class AccesoService {
         AccesoDTO respuesta = new AccesoDTO();
         respuesta.setNombreSocio(socio.getNombre());
         respuesta.setFechaHora(acceso.getFechaHora());
+        respuesta.setSocioId(socio.getId()); // Aseguramos que el socioId se envíe al frontend
 
         // agregamos el id del socio para que flutter pueda registrar el pago
         respuesta.setSocioId(socio.getId());
@@ -49,7 +49,6 @@ public class AccesoService {
         LocalDate hoy = LocalDate.now();
         boolean tieneAcceso = false;
 
-        // recorremos los pagos para ver si alguno esta vigente
         for (Membresia mem : membresias) {
             if (!mem.getFechaVencimiento().isBefore(hoy)) {
                 tieneAcceso = true;
@@ -57,13 +56,11 @@ public class AccesoService {
             }
         }
 
-        // semaforizacion dinamica y baja automatica
         if (tieneAcceso) {
             acceso.setEsExitoso(true);
             respuesta.setEsExitoso(true);
             respuesta.setMensajeSemaforo("luz verde: acceso permitido, pago vigente");
 
-            // aseguramos que el estado refleje que esta activo
             if (!"activo".equals(socio.getEstado())) {
                 socioService.cambiarEstado(socio.getId(), "activo");
             }
@@ -72,16 +69,30 @@ public class AccesoService {
             respuesta.setEsExitoso(false);
             respuesta.setMensajeSemaforo("luz roja: membresia vencida o no encontrada");
 
-            // automatizacion: damos de baja logica al socio
             if (!"inactivo".equals(socio.getEstado())) {
                 socioService.cambiarEstado(socio.getId(), "inactivo");
             }
         }
 
-        // guardamos el historial en base de datos
         Acceso accesoGuardado = accesoRepository.save(acceso);
         respuesta.setId(accesoGuardado.getId());
 
         return respuesta;
+    }
+
+    // Nuevo: Método para obtener los últimos accesos y convertirlos a DTO
+    public List<AccesoDTO> obtenerUltimosAccesos() {
+        List<Acceso> ultimosAccesos = accesoRepository.findTop10ByOrderByFechaHoraDesc();
+        
+        return ultimosAccesos.stream().map(acceso -> {
+            AccesoDTO dto = new AccesoDTO();
+            dto.setId(acceso.getId());
+            dto.setFechaHora(acceso.getFechaHora());
+            dto.setEsExitoso(acceso.getEsExitoso());
+            dto.setMensajeSemaforo(acceso.getEsExitoso() ? "Acceso Exitoso" : "Acceso Denegado"); // Mensaje genérico para la lista
+            dto.setNombreSocio(acceso.getSocio().getNombre());
+            dto.setSocioId(acceso.getSocio().getId());
+            return dto;
+        }).collect(Collectors.toList());
     }
 }

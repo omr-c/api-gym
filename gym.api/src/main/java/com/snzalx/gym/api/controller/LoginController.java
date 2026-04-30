@@ -13,6 +13,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(origins = "*") // Habilitar CORS para permitir acceso desde el móvil
 public class LoginController {
 
     @Autowired

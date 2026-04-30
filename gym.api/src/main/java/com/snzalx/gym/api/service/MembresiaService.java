@@ -27,14 +27,21 @@ public class MembresiaService {
         this.emailService = emailService;
     }
 
+    // Lógica principal para registrar un pago y renovar la membresía
     public MembresiaDTO registrarPago(MembresiaDTO dto) {
+        // 1. Búsqueda flexible del socio (por ID o por QrToken)
         Socio socio = socioRepository.findById(dto.getSocioId())
+                .or(() -> socioRepository.findByQrToken(dto.getSocioId()))
                 .orElseThrow(() -> new RuntimeException("Socio no encontrado para registrar pago"));
 
+        // 2. Definimos la fecha de inicio (hoy)
         LocalDate fechaInicio = LocalDate.now();
+
+        // 3. Calculamos la fecha de vencimiento según la duración recibida (por defecto 30 días)
         int dias = (dto.getDuracionDias() != null) ? dto.getDuracionDias() : 30;
         LocalDate fechaVencimiento = fechaInicio.plusDays(dias);
 
+        // 4. Creamos y guardamos la entidad Membresia
         Membresia membresia = new Membresia();
         membresia.setSocio(socio);
         membresia.setMonto(dto.getMonto());
@@ -44,9 +51,10 @@ public class MembresiaService {
 
         Membresia guardada = membresiaRepository.save(membresia);
 
+        // 5. Actualizamos el estado del socio a "activo"
         socioService.cambiarEstado(socio.getId(), "activo");
 
-        // Disparo de correo asíncrono
+        // 6. Envío de correo electrónico (si el socio tiene uno registrado)
         if (socio.getEmail() != null && !socio.getEmail().isEmpty()) {
             emailService.enviarReciboPago(
                 socio.getEmail(), 
@@ -56,6 +64,7 @@ public class MembresiaService {
             );
         }
 
+        // 7. Preparamos el DTO de respuesta para la App Flutter
         MembresiaDTO respuesta = new MembresiaDTO();
         respuesta.setId(guardada.getId());
         respuesta.setSocioId(socio.getId());

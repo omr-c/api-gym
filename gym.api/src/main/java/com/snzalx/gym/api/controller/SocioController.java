@@ -9,6 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/socios")
+@CrossOrigin(origins = "*") // Habilitar CORS para este controlador
 public class SocioController {
 
     private final SocioService socioService;
