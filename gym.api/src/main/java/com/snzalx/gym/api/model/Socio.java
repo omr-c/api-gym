@@ -9,18 +9,21 @@ import java.util.UUID;
 @Data
 public class Socio {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
     private String nombre;
     private String telefono;
     private String email;
     private String fotoUrl;
-    
+
     @Column(unique = true)
-    private UUID qrToken;
-    
+    private UUID qrToken; // token para la identidad digital[cite: 3]
+
     private String bio;
     private String instagramUrl;
-    private String estado;
+    private String estado; // activo o inactivo[cite: 6]
+
+    // este campo es el que permite al logincontroller decidir la navegacion
+    private String rol; // puede ser admin, recepcion o socio
 }

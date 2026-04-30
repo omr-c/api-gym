@@ -18,21 +18,23 @@ public class NotificacionService {
         this.emailService = emailService;
     }
 
-    // Se ejecuta todos los días a las 10:00 AM
-    @Scheduled(cron = "0 0 10 * * ?") 
+    // se ejecuta todos los dias a las 10:00 am para buscar vencimientos[cite: 20]
+    @Scheduled(cron = "0 0 10 * * ?")
     public void enviarRecordatoriosVencimientoDiarios() {
         LocalDate hoy = LocalDate.now();
         LocalDate proximaSemana = hoy.plusDays(7);
-        
-        // Buscamos membresías que vencen exactamente en 7 días
+
+        // buscamos membresias que vencen exactamente en 7 dias[cite: 20]
         List<Membresia> membresiasAVencer = membresiaRepository.findByFechaVencimientoBetween(proximaSemana, proximaSemana);
-        
+
         for (Membresia m : membresiasAVencer) {
+            // verificamos que el socio tenga un correo valido antes de enviar[cite: 20]
             if (m.getSocio().getEmail() != null && !m.getSocio().getEmail().isEmpty()) {
+                // llamada al metodo de emailservice con los 3 parametros de tipo string[cite: 18, 20]
                 emailService.enviarRecordatorioVencimiento(
-                    m.getSocio().getEmail(), 
-                    m.getSocio().getNombre(), 
-                    m.getFechaVencimiento().toString()
+                        m.getSocio().getEmail(),
+                        m.getSocio().getNombre(),
+                        m.getFechaVencimiento().toString()
                 );
             }
         }
