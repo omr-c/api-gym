@@ -14,6 +14,7 @@ public class EmailService {
         this.mailSender = mailSender;
     }
 
+    // envia el recibo cuando se registra un pago[cite: 18, 19]
     @Async
     public void enviarReciboPago(String destinatario, String nombreSocio, Double monto, String fechaVencimiento) {
         SimpleMailMessage message = new SimpleMailMessage();
@@ -23,39 +24,39 @@ public class EmailService {
                 "Hemos registrado tu pago exitosamente.\n\n" +
                 "Detalles del pago:\n" +
                 "- Monto: $" + monto + "\n" +
-                "- Tu membresía es válida hasta: " + fechaVencimiento + "\n\n" +
+                "- Tu membresia es valida hasta: " + fechaVencimiento + "\n\n" +
                 "¡Gracias por entrenar con nosotros!\n" +
                 "Equipo de Gym Rats.");
-        
+
         mailSender.send(message);
     }
 
+    // envia correo automatico al crear la cuenta[cite: 18, 21]
     @Async
     public void enviarBienvenida(String destinatario, String nombreSocio) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(destinatario);
         message.setSubject("¡Bienvenido a Gym Rats!");
         message.setText("Hola " + nombreSocio + ",\n\n" +
-                "¡Gracias por unirte a nuestra comunidad! Tu registro se ha realizado con éxito.\n\n" +
-                "Tu estado actual es PENDIENTE. Para poder acceder al gimnasio con tu código QR, por favor acude a recepción para realizar tu primer pago.\n\n" +
-                "¡Estamos listos para ayudarte a cumplir tus metas!\n\n" +
+                "¡Gracias por unirte a nuestra comunidad! Tu registro se ha realizado con exito.\n\n" +
+                "Tu estado actual es pendiente. Acude a recepcion para activar tu membresia.\n\n" +
                 "Equipo de Gym Rats.");
-        
+
         mailSender.send(message);
     }
 
+    // este es el metodo que el compilador no encontraba
     @Async
     public void enviarRecordatorioVencimiento(String destinatario, String nombreSocio, String fechaVencimiento) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(destinatario);
-        message.setSubject("Recordatorio de Vencimiento de Membresía - Gym Rats");
+        message.setSubject("Recordatorio de Vencimiento de Membresia - Gym Rats");
         message.setText("Hola " + nombreSocio + ",\n\n" +
-                "Te escribimos para recordarte que tu membresía está próxima a vencer.\n\n" +
+                "Te escribimos para recordarte que tu membresia esta proxima a vencer.\n\n" +
                 "Fecha de vencimiento: " + fechaVencimiento + "\n\n" +
-                "Te invitamos a realizar tu renovación a tiempo para que puedas seguir disfrutando de nuestras instalaciones sin interrupciones.\n\n" +
-                "¡Nos vemos en el entrenamiento!\n" +
+                "Te invitamos a renovar a tiempo para evitar interrupciones.\n\n" +
                 "Equipo de Gym Rats.");
-        
+
         mailSender.send(message);
     }
 }

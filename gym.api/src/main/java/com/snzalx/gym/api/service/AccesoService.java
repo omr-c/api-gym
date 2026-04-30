@@ -40,6 +40,10 @@ public class AccesoService {
         respuesta.setFechaHora(acceso.getFechaHora());
         respuesta.setSocioId(socio.getId()); // Aseguramos que el socioId se envíe al frontend
 
+        // agregamos el id del socio para que flutter pueda registrar el pago
+        respuesta.setSocioId(socio.getId());
+
+        // buscamos el historial de membresias del socio
         List<Membresia> membresias = membresiaRepository.findBySocioId(socio.getId());
 
         LocalDate hoy = LocalDate.now();
