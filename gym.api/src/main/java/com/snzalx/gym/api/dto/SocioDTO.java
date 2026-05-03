@@ -3,9 +3,8 @@ package com.snzalx.gym.api.dto;
 import lombok.Data;
 import java.util.UUID;
 
-// dto para transferir la informacion del socio a la app movil
 @Data
-public class SocioDTO {
+public class SocioDTO { // Corregido: Eliminado el 'class' duplicado
     private UUID id;
     private String nombre;
     private String telefono;
@@ -15,4 +14,5 @@ public class SocioDTO {
     private String bio;
     private String instagramUrl;
     private String estado;
+    private Long diasRestantes; // Nuevo campo calculado para el frontend
 }
