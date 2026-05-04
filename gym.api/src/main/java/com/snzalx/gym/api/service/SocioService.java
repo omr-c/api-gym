@@ -29,8 +29,13 @@ public class SocioService {
     }
 
     public Socio registrarSocio(Socio socio) {
-        log.info("DEBUG: Recibida petición de registro de socio -> {}", socio);
-        System.out.println("DEBUG (Consola): Recibida petición de registro de socio -> " + socio);
+        log.info("debug: recibida peticion de registro de socio -> {}", socio);
+
+        // regla de negocio: validar unicidad del telefono antes de guardar
+        if (socioRepository.findByTelefono(socio.getTelefono()).isPresent()) {
+            log.error("error: el telefono {} ya esta registrado en el sistema", socio.getTelefono());
+            throw new RuntimeException("El número de teléfono ya está registrado con otro usuario");
+        }
 
         if (socio.getRol() == null || socio.getRol().isEmpty()) {
             socio.setRol("socio");
@@ -38,23 +43,21 @@ public class SocioService {
 
         socio.setEstado("pendiente");
         socio.setQrToken(UUID.randomUUID());
-        
+
         Socio guardado = socioRepository.save(socio);
-        
+
         if (guardado.getEmail() != null && !guardado.getEmail().isEmpty()) {
             emailService.enviarBienvenida(guardado.getEmail(), guardado.getNombre());
         }
-        
+
         return guardado;
     }
 
-    // Este método es llamado por AccesoService y espera un objeto Socio
     public Socio obtenerPorQr(UUID qrToken) {
         return socioRepository.findByQrToken(qrToken)
                 .orElseThrow(() -> new RuntimeException("socio no encontrado en el sistema"));
     }
 
-    // Nuevo método para que el frontend obtenga el SocioDTO con diasRestantes
     public SocioDTO obtenerSocioDtoPorQr(UUID qrToken) {
         Socio socio = socioRepository.findByQrToken(qrToken)
                 .orElseThrow(() -> new RuntimeException("socio no encontrado en el sistema"));
@@ -75,7 +78,6 @@ public class SocioService {
                 .collect(Collectors.toList());
     }
 
-    // Método auxiliar para convertir Socio a SocioDTO y calcular diasRestantes
     private SocioDTO convertSocioToDto(Socio socio) {
         SocioDTO dto = new SocioDTO();
         dto.setId(socio.getId());
@@ -88,18 +90,17 @@ public class SocioService {
         dto.setInstagramUrl(socio.getInstagramUrl());
         dto.setEstado(socio.getEstado());
 
-        // Calcular diasRestantes
         List<Membresia> membresias = membresiaRepository.findLatestMembresiaBySocioId(socio.getId());
         if (!membresias.isEmpty()) {
-            Membresia ultimaMembresia = membresias.get(0); // La más reciente por el ORDER BY
+            Membresia ultimaMembresia = membresias.get(0);
             LocalDate hoy = LocalDate.now();
             if (ultimaMembresia.getFechaVencimiento().isAfter(hoy)) {
                 dto.setDiasRestantes(ChronoUnit.DAYS.between(hoy, ultimaMembresia.getFechaVencimiento()));
             } else {
-                dto.setDiasRestantes(0L); // Membresía vencida o vence hoy
+                dto.setDiasRestantes(0L);
             }
         } else {
-            dto.setDiasRestantes(0L); // No tiene membresías
+            dto.setDiasRestantes(0L);
         }
 
         return dto;
