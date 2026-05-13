@@ -14,7 +14,17 @@ public class EmailService {
         this.mailSender = mailSender;
     }
 
-    // envia el recibo cuando se registra un pago[cite: 18, 19]
+    // envia un correo con asunto y cuerpo personalizado para codigos u otros avisos
+    @Async
+    public void enviarCorreoGenerico(String destinatario, String asunto, String mensaje) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(destinatario);
+        message.setSubject(asunto);
+        message.setText(mensaje);
+        mailSender.send(message);
+    }
+
+    // envia el recibo cuando se registra un pago
     @Async
     public void enviarReciboPago(String destinatario, String nombreSocio, Double monto, String fechaVencimiento) {
         SimpleMailMessage message = new SimpleMailMessage();
@@ -31,7 +41,7 @@ public class EmailService {
         mailSender.send(message);
     }
 
-    // envia correo automatico al crear la cuenta[cite: 18, 21]
+    // envia correo automatico al crear la cuenta
     @Async
     public void enviarBienvenida(String destinatario, String nombreSocio) {
         SimpleMailMessage message = new SimpleMailMessage();
@@ -45,7 +55,7 @@ public class EmailService {
         mailSender.send(message);
     }
 
-    // este es el metodo que el compilador no encontraba
+    // avisa al socio que su membresia esta por vencer
     @Async
     public void enviarRecordatorioVencimiento(String destinatario, String nombreSocio, String fechaVencimiento) {
         SimpleMailMessage message = new SimpleMailMessage();

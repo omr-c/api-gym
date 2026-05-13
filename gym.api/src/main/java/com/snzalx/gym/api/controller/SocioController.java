@@ -21,18 +21,55 @@ public class SocioController {
         this.socioService = socioService;
     }
 
-    @PostMapping("/registrar")
-    public ResponseEntity<Socio> registrar(@RequestBody Socio socio) {
-        return ResponseEntity.ok(socioService.registrarSocio(socio));
+    @PostMapping("/solicitar-codigo")
+    public ResponseEntity<String> solicitarCodigo(@RequestParam String email, @RequestParam String telefono) {
+        try {
+            socioService.solicitarCodigo(email, telefono);
+            return ResponseEntity.ok("Código enviado exitosamente");
+        } catch (IllegalArgumentException e) {
+            // Devuelve 409 Conflict si los datos ya existen
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        } catch (Exception e) {
+            // Devuelve 500 si falla el envío de correo
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor");
+        }
     }
 
-    // Nuevo: Endpoint para el panel administrativo
+    @PostMapping("/validar-codigo")
+    public ResponseEntity<Boolean> validarCodigo(@RequestParam String email, @RequestParam String codigo) {
+        boolean esValido = socioService.validarCodigo(email, codigo);
+        return ResponseEntity.ok(esValido);
+    }
+
+    @PostMapping("/registrar")
+    public ResponseEntity<Socio> registrar(@RequestBody Socio socio) {
+        try {
+            Socio registrado = socioService.registrarSocio(socio);
+            return ResponseEntity.status(HttpStatus.CREATED).body(registrado);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
+    // --- NUEVO ENDPOINT PARA EDITAR PERFIL ---
+    @PutMapping("/actualizar/{id}")
+    public ResponseEntity<Socio> actualizarPerfil(@PathVariable UUID id, @RequestBody Socio socioData) {
+        try {
+            Socio socioActualizado = socioService.actualizarPerfil(id, socioData.getNombre(), socioData.getFotoUrl());
+            return ResponseEntity.ok(socioActualizado);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+    // -----------------------------------------
+
+    // Endpoint para el panel administrativo
     @GetMapping("/activos")
     public ResponseEntity<List<SocioDTO>> listarActivos() {
         return ResponseEntity.ok(socioService.listarActivos());
     }
 
-    // Nuevo: Endpoint para obtener el perfil completo del socio con diasRestantes
+    // Endpoint para obtener el perfil completo del socio con diasRestantes
     @GetMapping("/perfil/{qrToken}")
     public ResponseEntity<SocioDTO> obtenerPerfilSocio(@PathVariable UUID qrToken) {
         try {

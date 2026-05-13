@@ -12,11 +12,11 @@ import java.util.UUID;
 public interface SocioRepository extends JpaRepository<Socio, UUID> {
     Optional<Socio> findByQrToken(UUID qrToken);
     Optional<Socio> findByTelefono(String telefono);
+    Optional<Socio> findByEmail(String email);
     List<Socio> findByEstadoIgnoreCase(String estado);
     Long countByEstadoIgnoreCase(String estado);
-    Optional<Socio> findByEmail(String email);
 
-    // Nuevo: Optimizado para contar todos los socios por estado en una sola consulta
+    // optimizado para contar todos los socios por estado en una sola consulta
     @Query("SELECT s.estado, COUNT(s) FROM Socio s GROUP BY s.estado")
     List<Object[]> countAllSociosByEstado();
 }
