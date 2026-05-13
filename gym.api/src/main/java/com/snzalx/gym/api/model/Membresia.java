@@ -2,6 +2,7 @@ package com.snzalx.gym.api.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import java.math.BigDecimal; // Importar BigDecimal
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -15,7 +16,7 @@ public class Membresia {
 
     private LocalDate fechaInicio;
     private LocalDate fechaVencimiento;
-    private Double monto;
+    private BigDecimal monto; // ¡Asegurándonos de que sea BigDecimal!
     private String metodoPago;
 
     @ManyToOne

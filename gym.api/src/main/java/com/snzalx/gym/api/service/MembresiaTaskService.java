@@ -42,6 +42,8 @@ public class MembresiaTaskService {
                 socio.setEstado("inactivo");
                 socioRepository.save(socio);
                 log.info("Socio {} (ID: {}) cambiado a estado 'inactivo' por vencimiento.", socio.getNombre(), socio.getId());
+                // También enviar aviso de vencimiento y restricción de acceso
+                emailService.enviarAvisoVencimiento(socio);
             }
         }
 
@@ -52,11 +54,7 @@ public class MembresiaTaskService {
         for (Membresia membresia : membresiasParaAlerta) {
             Socio socio = membresia.getSocio();
             if (socio.getEmail() != null && !socio.getEmail().isEmpty()) {
-                emailService.enviarRecordatorioVencimiento(
-                        socio.getEmail(),
-                        socio.getNombre(),
-                        membresia.getFechaVencimiento().toString()
-                );
+                emailService.enviarRecordatorioVencimiento(socio); // Corregido: pasar el objeto Socio
                 log.info("Enviado recordatorio de vencimiento a {} (ID: {}) para el {}.", socio.getNombre(), socio.getId(), membresia.getFechaVencimiento());
             }
         }

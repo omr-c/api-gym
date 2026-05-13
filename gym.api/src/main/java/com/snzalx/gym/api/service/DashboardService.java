@@ -39,7 +39,7 @@ public class DashboardService {
         LocalDate hoy = LocalDate.now();
         LocalDate haceUnaSemana = hoy.minusDays(6);
 
-        List<Acceso> accesosUltimaSemana = accesoRepository.findByFechaHoraBetween(
+        List<Acceso> accesosUltimaSemana = accesoRepository.findByFechaAccesoBetween(
                 haceUnaSemana.atStartOfDay(),
                 hoy.atTime(LocalTime.MAX)
         );
@@ -47,7 +47,7 @@ public class DashboardService {
         // Agrupar y asegurar que los días vacíos tengan 0
         Map<LocalDate, Long> conteoPorDia = accesosUltimaSemana.stream()
                 .collect(Collectors.groupingBy(
-                        acceso -> acceso.getFechaHora().toLocalDate(),
+                        acceso -> acceso.getFechaAcceso().toLocalDate(),
                         Collectors.counting()
                 ));
 
@@ -93,7 +93,7 @@ public class DashboardService {
     private Double sumarIngresos(LocalDate inicio, LocalDate fin) {
         return membresiaRepository.findByFechaInicioBetween(inicio, fin)
                 .stream()
-                .mapToDouble(Membresia::getMonto)
+                .mapToDouble(membresia -> membresia.getMonto().doubleValue()) // Corregido aquí
                 .sum();
     }
 }

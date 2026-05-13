@@ -28,81 +28,89 @@ public class SocioService {
         this.emailService = emailService;
     }
 
-    public Socio registrarSocio(Socio socio) {
-        log.info("debug: recibida peticion de registro de socio -> {}", socio);
+    public SocioDTO registrarSocio(Socio socio) {
+        log.info("Intentando registrar socio con email: {}", socio.getEmail());
 
-        // regla de negocio: validar unicidad del telefono antes de guardar
-        if (socioRepository.findByTelefono(socio.getTelefono()).isPresent()) {
-            log.error("error: el telefono {} ya esta registrado en el sistema", socio.getTelefono());
-            throw new RuntimeException("El número de teléfono ya está registrado con otro usuario");
+        if (socioRepository.findByEmail(socio.getEmail()).isPresent()) {
+            throw new RuntimeException("El email ya está registrado");
         }
 
-        if (socio.getRol() == null || socio.getRol().isEmpty()) {
-            socio.setRol("socio");
+        // --- CORRECCIÓN CRÍTICA AQUÍ ---
+        // Generamos el token único para el QR antes de guardar en la BD
+        if (socio.getQrToken() == null) {
+            socio.setQrToken(UUID.randomUUID());
+            log.info("Generando nuevo QR Token para el socio: {}", socio.getQrToken());
         }
+        // -------------------------------
 
-        socio.setEstado("pendiente");
-        socio.setQrToken(UUID.randomUUID());
+        if (socio.getEstado() == null) {
+            socio.setEstado("vencido");
+        }
 
         Socio guardado = socioRepository.save(socio);
 
-        if (guardado.getEmail() != null && !guardado.getEmail().isEmpty()) {
-            emailService.enviarBienvenida(guardado.getEmail(), guardado.getNombre());
+        try {
+            emailService.enviarCorreoBienvenida(guardado);
+        } catch (Exception e) {
+            log.error("Error al enviar correo de bienvenida: {}", e.getMessage());
         }
 
-        return guardado;
+        return convertToDTO(guardado);
     }
 
-    public Socio obtenerPorQr(UUID qrToken) {
-        return socioRepository.findByQrToken(qrToken)
-                .orElseThrow(() -> new RuntimeException("socio no encontrado en el sistema"));
+    public List<SocioDTO> findAllSocios() {
+        return socioRepository.findAll().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public long listarActivos() {
+        return socioRepository.countByEstadoIgnoreCase("activo");
+    }
+
+    public long countSociosWithExpiredMembership() {
+        return socioRepository.countByEstadoIgnoreCase("vencido");
+    }
+
+    public void cambiarEstado(UUID id, String nuevoEstado) {
+        Socio socio = socioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Socio no encontrado"));
+        socio.setEstado(nuevoEstado);
+        socioRepository.save(socio);
+        log.info("Estado del socio {} actualizado a {}", id, nuevoEstado);
     }
 
     public SocioDTO obtenerSocioDtoPorQr(UUID qrToken) {
         Socio socio = socioRepository.findByQrToken(qrToken)
-                .orElseThrow(() -> new RuntimeException("socio no encontrado en el sistema"));
-        return convertSocioToDto(socio);
+                .orElseThrow(() -> new RuntimeException("Socio no encontrado"));
+        return convertToDTO(socio);
     }
 
-    public Socio cambiarEstado(UUID id, String nuevoEstado) {
-        Socio socio = socioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("socio no encontrado"));
-        socio.setEstado(nuevoEstado);
-        return socioRepository.save(socio);
-    }
-
-    public List<SocioDTO> listarActivos() {
-        List<Socio> sociosActivos = socioRepository.findByEstadoIgnoreCase("activo");
-        return sociosActivos.stream()
-                .map(this::convertSocioToDto)
-                .collect(Collectors.toList());
-    }
-
-    private SocioDTO convertSocioToDto(Socio socio) {
+    public SocioDTO convertToDTO(Socio socio) {
         SocioDTO dto = new SocioDTO();
         dto.setId(socio.getId());
         dto.setNombre(socio.getNombre());
         dto.setTelefono(socio.getTelefono());
         dto.setEmail(socio.getEmail());
         dto.setFotoUrl(socio.getFotoUrl());
-        dto.setQrToken(socio.getQrToken());
+        dto.setQrToken(socio.getQrToken()); // Aquí ahora viajará el UUID real
         dto.setBio(socio.getBio());
         dto.setInstagramUrl(socio.getInstagramUrl());
         dto.setEstado(socio.getEstado());
+        dto.setRol(socio.getRol());
 
         List<Membresia> membresias = membresiaRepository.findLatestMembresiaBySocioId(socio.getId());
         if (!membresias.isEmpty()) {
-            Membresia ultimaMembresia = membresias.get(0);
+            Membresia ultima = membresias.get(0);
             LocalDate hoy = LocalDate.now();
-            if (ultimaMembresia.getFechaVencimiento().isAfter(hoy)) {
-                dto.setDiasRestantes(ChronoUnit.DAYS.between(hoy, ultimaMembresia.getFechaVencimiento()));
+            if (ultima.getFechaVencimiento().isAfter(hoy)) {
+                dto.setDiasRestantes(ChronoUnit.DAYS.between(hoy, ultima.getFechaVencimiento()));
             } else {
                 dto.setDiasRestantes(0L);
             }
         } else {
             dto.setDiasRestantes(0L);
         }
-
         return dto;
     }
 }

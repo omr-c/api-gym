@@ -4,7 +4,7 @@ import lombok.Data;
 import java.util.UUID;
 
 @Data
-public class SocioDTO { // Corregido: Eliminado el 'class' duplicado
+public class SocioDTO {
     private UUID id;
     private String nombre;
     private String telefono;
@@ -14,5 +14,6 @@ public class SocioDTO { // Corregido: Eliminado el 'class' duplicado
     private String bio;
     private String instagramUrl;
     private String estado;
-    private Long diasRestantes; // Nuevo campo calculado para el frontend
+    private String rol;
+    private Long diasRestantes; // Campo calculado para las alertas de color en el Front
 }

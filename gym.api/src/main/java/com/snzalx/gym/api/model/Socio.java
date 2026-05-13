@@ -18,12 +18,12 @@ public class Socio {
     private String fotoUrl;
 
     @Column(unique = true)
-    private UUID qrToken; // token para la identidad digital[cite: 3]
+    private UUID qrToken; // Token para la identidad digital
 
     private String bio;
     private String instagramUrl;
-    private String estado; // activo o inactivo[cite: 6]
+    private String estado; // activo, inactivo o pendiente
 
-    // este campo es el que permite al logincontroller decidir la navegacion
-    private String rol; // puede ser admin, recepcion o socio
+    // Campo para decidir la navegación en el LoginController
+    private String rol; // admin, recepcion o socio
 }
